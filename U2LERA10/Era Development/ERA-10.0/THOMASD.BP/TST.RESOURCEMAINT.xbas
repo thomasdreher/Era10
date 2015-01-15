@@ -1,0 +1,246 @@
+$INCLUDE PLATFORM.BP PLATFORM.EQUATES
+$INCLUDE GEN.BP ERANET.EQUATES
+$INCLUDE GEN.BP ERANET.ALLEQUATES
+
+* added a comment and another change ssssd changed.
+
+lang$Host = ''
+lang$Display = ''
+lang$DISPLAY<1,1> = "ENG"
+lang$AVAILABLE = ''
+var$IMD(10) = 'MD0'
+var$IMD(13) = 'MD3'
+country$ID  = ''
+usr = 'thomasd'
+crt 'STORE ': ; input STORE.NO
+if STORE.NO = '' then
+  STORE.NO = 'STORE420'
+end
+Servc.Store = STORE.NO
+
+Dim Vals(20)
+RStatus = ''
+Eranet.fmt    = 1
+
+   crt @(-1)
+   crt @(0,2):"1. GetClassCode"
+   crt @(0,3):"2. SearchResources"
+   crt @(0,4):"3. SearchClassifications"
+   crt @(0,5):"4. Set Drivers Mobile"
+   crt @(0,5):"5. Check if Classification used"
+   crt @(0,6):"6. Test Date Conversion"
+   crt @(0,7):"7. Test Email Verification"
+   crt @(0,8):"8. If verification"      
+   crt @(0,9):"9. If add non numerical"      
+   crt @(0,18):"Selection : ": ; input sel
+   row = 10
+   begin case
+     case sel = 1
+        gosub GetClassCode
+     case sel = 2
+        gosub SearchResources
+     case sel = 3
+        gosub SearchClassifications
+     case sel = 4
+        gosub SetDriversMobile
+     case sel = 5
+        gosub CheckClassCodeUsed
+     case sel = 6
+        gosub TestDateConversion
+     case sel = 7
+        gosub TestEmailVerification
+     case sel = 8
+        gosub IfVerification
+     case sel = 9
+        gosub TestNumerical
+   end case
+
+stop
+
+
+TestNumerical:
+*bal = 1000
+bal = ''
+subtr1 = 'a'
+subtr2 = 10
+i_substr1 = num(subtr1)
+i_substr2 = num(subtr2)
+
+print subtr1, i_substr1
+print subtr2, i_substr2
+
+bal = bal - num(subtr1) - num(subtr2)
+
+print "bal=" : bal
+
+input wait
+
+
+return
+
+
+IfVerification:
+flag.CURR.ONLY = ""
+ if flag.CURR.ONLY then
+  PRINT "empty is true"
+ end else
+  PRINT "empty is false" 
+ end 
+
+
+return
+
+TestEmailVerification:
+crt @(0,18):"Input Email : ": ; input sel
+
+valid.email = @false
+
+*current Email validation program is javascript only.
+
+return
+
+
+
+TestDateConversion:
+crt @(0,18):"Input Date : ": ; input sel
+RET.DATE = ''
+MSG.START.DATE = ''
+DIM SCR.DATA(10) 
+equate START.DATE.FLD to 2
+SCR.DATA(START.DATE.FLD) = sel
+VARDAT.D2 = "D2/"
+
+
+
+
+         if not(num(SCR.DATA(START.DATE.FLD))) then
+            RET.DATE = SCR.DATA(START.DATE.FLD)
+            call GEFFIDATE("",RET.DATE)
+            MSG.START.DATE = oconv(RET.DATE,VARDAT.D2)
+         end else
+            MSG.START.DATE = oconv(SCR.DATA(START.DATE.FLD),VARDAT.D2)
+         end
+
+
+*PRINT SCR.DATA(START.DATE.FLD)
+*START.DATE = oconv(SCR.DATA(START.DATE.FLD), VARDAT.D2)
+PRINT "RET.DATE=": RET.DATE
+PRINT "MSG.START.DATE= " : MSG.START.DATE
+
+
+
+DEBUG
+CALL THOMAS.DEBUG(1,"MSG.START.DATE= " : MSG.START.DATE)
+*    OPENseq "/UVdata/disk1/STORE420/debug.txt" to DFILE THEN
+*
+*    	writeseq "Run at: " : oconv(DATE(),VARDAT.D2) : " " : oconv(time(),"MTS") to DFILE else abort
+*    	writeseq "MSG.START.DATE= " : MSG.START.DATE to DFILE else abort
+*    END ELSE
+*      print "cannot open file"
+*    END
+
+
+return
+
+SearchClassifications:
+ classCode = ''
+ classDesc = ''
+ lst.classifications = ''
+ crt @(0,18):"classification Code : ": ; input classCode
+ crt @(0,19):"Classification Description : ": ; input ClassDesc
+   CALL GET.CLASSIFICATION.LIST(classCode,classDesc,lst.classifications)
+   CRT lst.classifications 
+
+return
+
+
+SearchResources:
+ resid = ''
+ resname = ''
+ lst.RESOURCE = ''
+ crt @(0,18):"ResourceId : ": ; input resid
+ crt @(0,19):"ResourceName : ": ; input resname
+   CALL GET.RESOURCE.LIST(resid,resname,lst.RESOURCE)
+   CRT lst.RESOURCE
+return
+
+******************************
+SetDriversMobile:
+******************************
+Mobile.No = '0439904077'
+Serial.No = 'MPATFR85J9T100027'
+Reg.No    = 'EDC111'
+Entity.Id = '8356'
+Driver.Name = 'Bill Drivers'
+
+Serindex.rec = ''
+
+crt @(0,18):"ClassCode : ": ; input Mobile.No
+
+      Params      = ''
+      Params<1>   = "SetDriversMobileNo"
+      Params<2>   = Eranet.fmt
+      Params<3>   = Servc.Store
+      Params<4,1> = Entity.Id   
+      Params<4,2> = Serial.No
+      Params<4,3> = Mobile.No
+      *Params<4,4> = Serindex.rec<SRN.REG.NO>
+      Params<4,4> = Reg.No
+      Params<4,5> = Driver.Name 
+   
+      Mat Vals = ''
+      Vals(1)  = Serindex.rec
+      RStatus  = ''
+   
+      call ENTITYDRIVERSMOBILE.S.TST(Params, Mat Vals, RStatus)
+
+RStatus = ''
+
+ 
+  ClassDesc = Vals(1)<1>
+  crt "ClassDesc: ":ClassDesc
+
+return
+******************************
+CheckClassCodeUsed:
+******************************
+crt @(0,18):"ClassCode to check at resources : ": ; input sel
+  Params      = ''
+  Params<1>   = "CheckClassCodeUsed"
+  Params<2>   = ERAnet.fmt
+  Params<3>   = ''
+
+mat Vals = ''
+Params<4> = ''
+Params<5> = sel
+RStatus = ''
+  
+  call RESOURCEMAINT.S(Params,Mat Vals,RStatus)
+ 
+  ClassDesc = Vals(1)<1>
+  crt "Result: ":ClassDesc : " ,Status:" : Rstatus
+
+
+
+return
+
+******************************
+GetClassCode:
+******************************
+crt @(0,18):"ClassCode : ": ; input sel
+  Params      = ''
+  Params<1>   = "GetClassCode"
+  Params<2>   = ERAnet.fmt
+  Params<3>   = ''
+
+mat Vals = ''
+Params<4> = ''
+Params<5> = sel
+RStatus = ''
+  
+  call RESOURCEMAINT.S(Params,Mat Vals,RStatus)
+ 
+  ClassDesc = Vals(1)<1>
+  crt "ClassDesc: ":ClassDesc
+
+return
