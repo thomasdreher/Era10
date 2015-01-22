@@ -2,7 +2,7 @@ $INCLUDE PLATFORM.BP PLATFORM.EQUATES
 $INCLUDE GEN.BP ERANET.EQUATES
 $INCLUDE GEN.BP ERANET.ALLEQUATES
 
-* added a comment and another change ssssd 
+* added a comment and another change ssssdd
 
 lang$Host = ''
 lang$Display = ''
